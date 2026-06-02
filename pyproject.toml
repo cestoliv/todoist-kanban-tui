@@ -1,0 +1,21 @@
+[project]
+name = "todoist-kanban-tui"
+version = "0.1.0"
+description = "Read-only Todoist kanban board in the terminal"
+readme = "README.md"
+authors = [
+    { name = "Olivier Cartier", email = "olivier.cartier@lumapps.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "textual>=1.0",
+    "todoist-api-python>=3.0",
+    "click>=8.0",
+]
+
+[project.scripts]
+todoist-kanban-tui = "todoist_kanban_tui.cli:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
