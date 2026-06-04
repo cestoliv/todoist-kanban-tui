@@ -52,19 +52,19 @@ class TaskCard(Static, can_focus=True):
                 child_prefix = f"{child_dot} " if child_dot else ""
                 lines.append(f"  {connector} {child_prefix}{child.content}")
 
-        if self.expanded and task.description:
+        if self.expanded:
             lines.append("")
-            desc_lines = task.description.strip().split("\n")[:6]
-            for dl in desc_lines:
-                lines.append(f"  {dl[:60]}")
+            if task.description:
+                desc_lines = task.description.strip().split("\n")[:6]
+                for dl in desc_lines:
+                    lines.append(f"  {dl[:60]}")
+            else:
+                lines.append("  No description")
 
         return Text("\n".join(lines))
 
-    def on_focus(self) -> None:
-        self.expanded = True
-
-    def on_blur(self) -> None:
-        self.expanded = False
+    def toggle_expanded(self) -> None:
+        self.expanded = not self.expanded
 
     def watch_expanded(self) -> None:
-        self.refresh()
+        self.refresh(layout=True)
