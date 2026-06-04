@@ -77,6 +77,23 @@ TaskCard.overdue {
     color: $error;
 }
 
+/* Lifted card */
+TaskCard.lifted {
+    border: double $warning;
+    background: $warning 15%;
+    text-style: bold;
+}
+
+/* Drop target column */
+SectionColumn.drop-target .column-header {
+    background: $warning-muted;
+    text-style: bold italic;
+}
+
+SectionColumn.drop-target {
+    border-right: vkey $warning;
+}
+
 /* Empty board */
 #empty-board {
     width: 1fr;

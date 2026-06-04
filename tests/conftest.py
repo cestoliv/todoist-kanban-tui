@@ -88,4 +88,5 @@ def app(board):
             refresh_seconds=9999,
         )
         app.client.fetch_board = AsyncMock(return_value=board)
+        app.client.move_task = AsyncMock(return_value=None)
         yield app
