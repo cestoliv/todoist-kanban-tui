@@ -100,6 +100,13 @@ class TodoistClient:
             fetched_at=datetime.now(),
         )
 
+    async def move_task(self, task_id: str, section_id: str | None) -> None:
+        async with TodoistAPIAsync(self._token) as api:
+            if section_id is None:
+                await api.move_task(task_id, project_id=self._project_id)
+            else:
+                await api.move_task(task_id, section_id=section_id)
+
     async def fetch_projects(self) -> list[tuple[str, str]]:
         async with TodoistAPIAsync(self._token) as api:
             result: list[tuple[str, str]] = []

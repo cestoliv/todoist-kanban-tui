@@ -25,3 +25,8 @@ class SectionColumn(Vertical):
         with VerticalScroll(classes="column-scroll"):
             for task in self._tasks:
                 yield TaskCard(task)
+
+    def update_header_count(self) -> None:
+        name = self._section.name if self._section else "Unsectioned"
+        count = len(list(self.query(TaskCard)))
+        self.query_one(".column-header", Label).update(f" {name} ({count}) ")
