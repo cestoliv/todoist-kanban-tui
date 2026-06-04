@@ -6,6 +6,7 @@ from pathlib import Path
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
+from textual.events import Click
 from textual.reactive import reactive
 from textual.widgets import Label
 from textual import work
@@ -14,6 +15,7 @@ from .api.client import TodoistClient
 from .api.models import BoardData
 from .ipc.server import RefreshServer
 from .widgets.kanban_board import KanbanBoard
+from .widgets.section_column import SectionColumn
 from .widgets.status_bar import StatusBar
 from .widgets.task_card import TaskCard
 
@@ -26,6 +28,15 @@ class TodoistKanbanApp(App[None]):
         Binding("q", "quit", "Quit"),
         Binding("r", "refresh", "Refresh", priority=True),
         Binding("o", "open_in_browser", "Open", show=False),
+        Binding("d", "toggle_description", "Description", show=False),
+        Binding("up", "navigate('up')", "Up", show=False),
+        Binding("down", "navigate('down')", "Down", show=False),
+        Binding("left", "navigate('left')", "Left", show=False),
+        Binding("right", "navigate('right')", "Right", show=False),
+        Binding("k", "navigate('up')", "Up", show=False),
+        Binding("j", "navigate('down')", "Down", show=False),
+        Binding("h", "navigate('left')", "Left", show=False),
+        Binding("l", "navigate('right')", "Right", show=False),
         Binding("question_mark", "show_help", "Help"),
     ]
 
@@ -114,10 +125,59 @@ class TodoistKanbanApp(App[None]):
         if isinstance(focused, TaskCard):
             webbrowser.open(focused.task_data.url)
 
+    def action_toggle_description(self) -> None:
+        focused = self.focused
+        if isinstance(focused, TaskCard):
+            focused.toggle_expanded()
+
+    def action_navigate(self, direction: str) -> None:
+        focused = self.focused
+        if not isinstance(focused, TaskCard):
+            columns = list(self.query(SectionColumn))
+            if columns:
+                first_cards = columns[0].query(TaskCard)
+                if first_cards:
+                    first_cards.first(TaskCard).focus()
+            return
+
+        current_col = next((a for a in focused.ancestors_with_self if isinstance(a, SectionColumn)), None)
+        if current_col is None:
+            return
+        cards_in_col = list(current_col.query(TaskCard))
+        card_idx = cards_in_col.index(focused)
+
+        if direction in ("up", "down"):
+            delta = -1 if direction == "up" else 1
+            new_idx = (card_idx + delta) % len(cards_in_col)
+            target = cards_in_col[new_idx]
+        else:
+            columns = list(self.query(SectionColumn))
+            if not columns:
+                return
+            col_idx = columns.index(current_col)
+            delta = -1 if direction == "left" else 1
+            new_col_idx = (col_idx + delta) % len(columns)
+            new_col = columns[new_col_idx]
+            new_cards = list(new_col.query(TaskCard))
+            if not new_cards:
+                return
+            target = new_cards[min(card_idx, len(new_cards) - 1)]
+
+        target.focus()
+        target.scroll_visible()
+
+    def on_click(self, event: Click) -> None:
+        widget = self.screen.get_widget_at(event.screen_x, event.screen_y)[0]
+        while widget is not None:
+            if isinstance(widget, TaskCard):
+                widget.toggle_expanded()
+                return
+            widget = widget.parent
+
     def action_show_help(self) -> None:
         self.notify(
             "r=Refresh  q=Quit  o=Open in browser\n"
-            "h/l=Columns  j/k=Cards  ?=Help",
+            "↑↓/jk=Cards  ←→/hl=Columns  d=Description  ?=Help",
             title="Keybindings",
             timeout=8,
         )
